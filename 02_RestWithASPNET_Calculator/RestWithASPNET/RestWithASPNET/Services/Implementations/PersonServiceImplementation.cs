@@ -1,4 +1,5 @@
 ﻿using RestWithASPNET.Controllers.Model;
+using RestWithASPNET.Model.Context;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,50 +9,82 @@ namespace RestWithASPNET.Services.Implementations
 {
     public class PersonServiceImplementation : IPersonService
     {
+        private MySQLContext _context;
+
+        public PersonServiceImplementation(MySQLContext context)
+        {
+            _context = context;
+        }
+
         public Person Create(Person person)
         {
+            try
+            {
+                _context.Add(person);
+                _context.SaveChanges();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
             return person;
         }
 
         public void Delete(long id)
         {
-            return;
+            var result = _context.Persons.SingleOrDefault(p => p.Id.Equals(id));
+
+            if (result != null)
+            {
+                try
+                {
+                    _context.Persons.Remove(result);
+                    _context.SaveChanges();
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
         }
 
         public List<Person> FindAll()
         {
-            List<Person> persons = new List<Person>();
-
-            for (int i = 0; i < 8; i++)
-            {
-                persons.Add(new Person
-                {
-                    Id = i + 1,
-                    FirstName = "Name",
-                    LastName = "Person Last Name " + i,
-                    Address = "Porto Canoa - Serra",
-                    Gender = "Male"
-                });
-            }
-
-            return persons;
+           return _context.Persons.ToList();
         }
 
         public Person FindByID(long id)
         {
-            return new Person
-            {
-                Id = 1,
-                FirstName = "Rodrigo",
-                LastName = "Pereira",
-                Address = "Porto Canoa - Serra",
-                Gender = "Male"
-            };
+            return _context.Persons.SingleOrDefault(p => p.Id.Equals(id));
         }
 
         public Person Update(Person person)
         {
+            if (!Exists(person.Id))
+                return new Person();
+
+            var result = _context.Persons.SingleOrDefault(p => p.Id.Equals(person.Id));
+
+            if (result != null)
+            {
+                try
+                {
+                    _context.Entry(result).CurrentValues.SetValues(person);
+                    _context.SaveChanges();
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
+
             return person;
+        }
+
+        private bool Exists(long id)
+        {
+            return _context.Persons.Any(p => p.Id.Equals(id));
         }
     }
 }
