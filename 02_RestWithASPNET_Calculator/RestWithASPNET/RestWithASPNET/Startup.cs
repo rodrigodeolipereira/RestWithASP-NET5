@@ -34,6 +34,8 @@ namespace RestWithASPNET
             var connection = Configuration["MySQLConnection:MySQLConnectionString"];
             services.AddDbContext<MySQLContext>(options => options.UseMySql(connection, ServerVersion.AutoDetect(connection)));
 
+            services.AddApiVersioning(); 
+
             //Dependence Injection
             services.AddScoped<IPersonService, PersonServiceImplementation>();
         }
